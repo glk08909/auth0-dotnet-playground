@@ -97,6 +97,11 @@ namespace Auth0.AspNetCore.Authentication
         /// option is enabled the principal has already been rebuilt by the time this fires.
         /// It does not fire on a failed refresh (see <see cref="OnAccessTokenRefreshFailed"/>),
         /// nor for additional-audience (MRRT) token fetches.
+        /// <para>
+        /// This handler runs inside the cookie middleware's <c>OnValidatePrincipal</c> event, so an
+        /// exception thrown here is not swallowed &#8212; it surfaces into the authentication pipeline
+        /// and fails the current request. Guard any I/O you perform here accordingly.
+        /// </para>
         /// </summary>
         /// <example>
         /// <code>

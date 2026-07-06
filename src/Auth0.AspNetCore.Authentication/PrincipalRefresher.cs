@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
-using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -25,6 +25,7 @@ namespace Auth0.AspNetCore.Authentication
             OpenIdConnectOptions oidcOptions,
             RefreshClaimsValidationType validationType,
             IDictionary<string, string?>? properties,
+            HttpContext httpContext,
             CancellationToken cancellationToken)
         {
             var handler = new JwtSecurityTokenHandler();
@@ -35,55 +36,71 @@ namespace Auth0.AspNetCore.Authentication
 
             try
             {
-                ClaimsPrincipal principal;
+                var configuration = oidcOptions.ConfigurationManager != null
+                    ? await oidcOptions.ConfigurationManager.GetConfigurationAsync(cancellationToken)
+                    : null;
 
-                if (validationType == RefreshClaimsValidationType.Full)
+                // In multiple-custom-domains mode the SDK disables static issuer validation
+                // (ValidateIssuer = false) because the real issuer is the per-request resolved
+                // domain. Resolve it the same way the rest of the SDK does (prefer the token's
+                // own issuer, then the domain resolved for this request) so issuer validation
+                // still holds instead of failing against the static ValidIssuer.
+                var validateIssuer = oidcOptions.TokenValidationParameters.ValidateIssuer;
+                var validIssuer = oidcOptions.TokenValidationParameters.ValidIssuer;
+
+                if (!validateIssuer)
                 {
-                    var configuration = oidcOptions.ConfigurationManager != null
-                        ? await oidcOptions.ConfigurationManager.GetConfigurationAsync(cancellationToken)
-                        : null;
+                    var resolvedIssuer = currentPrincipal.FindFirst("iss")?.Value
+                        ?? httpContext.GetResolvedDomain();
 
-                    var tokenValidationParameters = new TokenValidationParameters
+                    if (!string.IsNullOrWhiteSpace(resolvedIssuer))
                     {
-                        ValidateAudience = true,
-                        ValidateIssuer = true,
-                        ValidateLifetime = true,
-                        RequireExpirationTime = true,
-                        ValidIssuer = oidcOptions.TokenValidationParameters.ValidIssuer,
-                        ValidAudience = oidcOptions.TokenValidationParameters.ValidAudience,
-                        NameClaimType = oidcOptions.TokenValidationParameters.NameClaimType,
-                        RoleClaimType = oidcOptions.TokenValidationParameters.RoleClaimType,
-                    };
-
-                    if (configuration != null)
-                    {
-                        tokenValidationParameters.IssuerSigningKeys =
-                            oidcOptions.TokenValidationParameters.IssuerSigningKeys?.Concat(configuration.SigningKeys)
-                            ?? configuration.SigningKeys;
+                        validIssuer = Utils.ToAuthority(resolvedIssuer);
+                        validateIssuer = true;
                     }
-
-                    principal = oidcOptions.SecurityTokenValidator.ValidateToken(idToken, tokenValidationParameters, out _);
                 }
-                else
+
+                var tokenValidationParameters = new TokenValidationParameters
                 {
-                    // SkipSignature: parse the token and project its claims onto a fresh identity
-                    // that mirrors the login-time name/role mapping, without verifying the signature.
-                    var jwt = handler.ReadJwtToken(idToken);
-                    var identity = new ClaimsIdentity(
-                        jwt.Claims,
-                        currentPrincipal.Identity?.AuthenticationType,
-                        oidcOptions.TokenValidationParameters.NameClaimType,
-                        oidcOptions.TokenValidationParameters.RoleClaimType);
-                    principal = new ClaimsPrincipal(identity);
+                    ValidateAudience = true,
+                    ValidateIssuer = validateIssuer,
+                    ValidateLifetime = true,
+                    RequireExpirationTime = true,
+                    ValidIssuer = validIssuer,
+                    ValidAudience = oidcOptions.TokenValidationParameters.ValidAudience,
+                    NameClaimType = oidcOptions.TokenValidationParameters.NameClaimType,
+                    RoleClaimType = oidcOptions.TokenValidationParameters.RoleClaimType,
+                };
+
+                if (configuration != null)
+                {
+                    tokenValidationParameters.IssuerSigningKeys =
+                        oidcOptions.TokenValidationParameters.IssuerSigningKeys?.Concat(configuration.SigningKeys)
+                        ?? configuration.SigningKeys;
                 }
 
-                // Both modes run the SDK's business-rule checks (sub, iat, azp, org, auth_time).
+                if (validationType == RefreshClaimsValidationType.SkipSignature)
+                {
+                    // SkipSignature trusts the back-channel TLS exchange with the token endpoint,
+                    // so we bypass signature verification. We still run the token through the same
+                    // SecurityTokenValidator as Full mode so the inbound claim-type mapping matches
+                    // the login path (e.g. ClaimTypes.NameIdentifier vs the short "sub" name).
+                    tokenValidationParameters.RequireSignedTokens = false;
+                    tokenValidationParameters.SignatureValidator = (token, _) => new JwtSecurityToken(token);
+                }
+
+                var principal = oidcOptions.SecurityTokenValidator.ValidateToken(idToken, tokenValidationParameters, out _);
+
+                // Both modes run the SDK's business-rule checks (sub, iat, azp, org). The
+                // auth_time/MaxAge check is deliberately skipped: a refresh grant does not
+                // re-authenticate the user, so auth_time never advances and enforcing MaxAge
+                // here would make every refresh fail once the login-freshness window elapses.
                 // Passing the auth properties re-applies the login-time organization constraint.
-                IdTokenValidator.Validate(options, handler.ReadJwtToken(idToken), properties);
+                IdTokenValidator.Validate(options, handler.ReadJwtToken(idToken), properties, validateAuthTime: false);
 
                 return principal;
             }
-            catch (Exception)
+            catch (System.Exception)
             {
                 // Any validation/parse failure degrades gracefully: caller keeps the stale principal.
                 return null;

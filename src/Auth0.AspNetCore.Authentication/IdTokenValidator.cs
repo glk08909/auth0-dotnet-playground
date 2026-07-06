@@ -12,7 +12,7 @@ namespace Auth0.AspNetCore.Authentication
 {
     internal static class IdTokenValidator
     {
-        public static void Validate(Auth0WebAppOptions auth0Options, JwtSecurityToken token, IDictionary<string, string?>? properties = null)
+        public static void Validate(Auth0WebAppOptions auth0Options, JwtSecurityToken token, IDictionary<string, string?>? properties = null, bool validateAuthTime = true)
         {
             var organization = properties != null && properties.ContainsKey(Auth0AuthenticationParameters.Organization) ? properties[Auth0AuthenticationParameters.Organization] : null;
 
@@ -59,7 +59,7 @@ namespace Auth0.AspNetCore.Authentication
                 }
             }
 
-            if (auth0Options.MaxAge.HasValue)
+            if (validateAuthTime && auth0Options.MaxAge.HasValue)
             {
                 var authTimeRaw = token.Claims.SingleOrDefault(claim => claim.Type == JwtRegisteredClaimNames.AuthTime)?.Value;
                 long? authTime = !string.IsNullOrWhiteSpace(authTimeRaw) ? (long?)Convert.ToDouble(authTimeRaw, CultureInfo.InvariantCulture) : null;

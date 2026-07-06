@@ -227,6 +227,7 @@ namespace Auth0.AspNetCore.Authentication
                                         oidcOptions,
                                         optionsWithAccessToken.RefreshClaimsValidationType,
                                         context.Properties.Items,
+                                        context.HttpContext,
                                         context.HttpContext.RequestAborted);
 
                                     if (rebuilt != null)

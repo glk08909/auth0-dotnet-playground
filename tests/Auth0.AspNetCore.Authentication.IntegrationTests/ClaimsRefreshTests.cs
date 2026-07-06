@@ -31,7 +31,10 @@ namespace Auth0.AspNetCore.Authentication.IntegrationTests
             bool tamperRefreshSignature = false,
             string organization = null,
             string loginOrgId = null,
-            string refreshOrgId = null)
+            string refreshOrgId = null,
+            TimeSpan? maxAge = null,
+            DateTime? loginAuthTime = null,
+            DateTime? refreshAuthTime = null)
         {
             var nonce = "";
             var domain = _configuration["Auth0:Domain"];
@@ -41,12 +44,12 @@ namespace Auth0.AspNetCore.Authentication.IntegrationTests
                 .MockOpenIdConfig()
                 .MockJwks()
                 .MockToken(
-                    () => JwtUtils.GenerateToken(1, $"https://{domain}/", clientId, loginOrgId, nonce, DateTime.UtcNow.AddSeconds(70), loginName),
+                    () => JwtUtils.GenerateToken(1, $"https://{domain}/", clientId, loginOrgId, nonce, DateTime.UtcNow.AddSeconds(70), loginName, loginAuthTime),
                     (me) => me.HasGrantType("authorization_code"))
                 .MockToken(
                     () => tamperRefreshSignature
-                        ? JwtUtils.GenerateToken(1, $"https://{domain}/", clientId, refreshOrgId, null, DateTime.UtcNow.AddSeconds(70), refreshName) + "tampered"
-                        : JwtUtils.GenerateToken(1, $"https://{domain}/", clientId, refreshOrgId, null, DateTime.UtcNow.AddSeconds(70), refreshName),
+                        ? JwtUtils.GenerateToken(1, $"https://{domain}/", clientId, refreshOrgId, null, DateTime.UtcNow.AddSeconds(70), refreshName, refreshAuthTime) + "tampered"
+                        : JwtUtils.GenerateToken(1, $"https://{domain}/", clientId, refreshOrgId, null, DateTime.UtcNow.AddSeconds(70), refreshName, refreshAuthTime),
                     (me) => me.HasGrantType("refresh_token"), 70, true, refreshStatus, "456_ROTATED")
                 .Build();
 
@@ -57,6 +60,10 @@ namespace Auth0.AspNetCore.Authentication.IntegrationTests
                 if (organization != null)
                 {
                     opts.Organization = organization;
+                }
+                if (maxAge != null)
+                {
+                    opts.MaxAge = maxAge;
                 }
             }, opts =>
             {
@@ -206,6 +213,47 @@ namespace Auth0.AspNetCore.Authentication.IntegrationTests
             captured.AccessToken.Should().NotBeNullOrEmpty();
             captured.IdToken.Should().NotBeNullOrEmpty();
             captured.ExpiresAt.Should().BeAfter(DateTimeOffset.Now);
+        }
+
+        [Fact]
+        public async Task Should_Rebuild_Principal_On_Refresh_Even_When_MaxAge_Window_Has_Elapsed()
+        {
+            // A refresh grant does not re-authenticate, so auth_time stays at the original login
+            // time. With MaxAge set, that time is already outside the freshness window by the time
+            // the refresh fires. The auth_time/MaxAge check is a login-freshness rule, not a claims
+            // rule, so it must not block the rebuild on the refresh path.
+            var content = await RunRefreshAsync(
+                loginName: "Old Name",
+                refreshName: "New Name",
+                configureAccessToken: opts =>
+                {
+                    opts.RebuildPrincipalOnRefresh = true;
+                    opts.RefreshClaimsValidationType = RefreshClaimsValidationType.Full;
+                },
+                maxAge: TimeSpan.FromSeconds(30),
+                loginAuthTime: DateTime.UtcNow,
+                refreshAuthTime: DateTime.UtcNow.AddSeconds(-300));
+
+            content.GetValue("Name").Value<string>().Should().Be("New Name");
+        }
+
+        [Fact]
+        public async Task Should_Map_Claim_Types_Consistently_In_SkipSignature_Mode()
+        {
+            // SkipSignature must run the refreshed token through the same validator as Full so the
+            // inbound claim-type mapping matches the login path. NameIdentifier is the mapped form
+            // of "sub"; if SkipSignature projected raw JWT claims it would be missing here.
+            var content = await RunRefreshAsync(
+                loginName: "Old Name",
+                refreshName: "New Name",
+                configureAccessToken: opts =>
+                {
+                    opts.RebuildPrincipalOnRefresh = true;
+                    opts.RefreshClaimsValidationType = RefreshClaimsValidationType.SkipSignature;
+                });
+
+            content.GetValue("Name").Value<string>().Should().Be("New Name");
+            content.GetValue("NameIdentifier").Value<string>().Should().Be("1");
         }
 
         [Fact]
