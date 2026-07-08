@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.9.0](https://github.com/auth0/auth0-aspnetcore-authentication/tree/1.9.0) (2026-07-08)
+[Full Changelog](https://github.com/auth0/auth0-aspnetcore-authentication/compare/1.8.0...1.9.0)
+
+**Added**
+
+- **Token Vault support** [\#255](https://github.com/auth0/auth0-aspnetcore-authentication/pull/255) ([kailash-b](https://github.com/kailash-b)) - web apps can now obtain a third-party API access token for a federated connection (e.g. Google, GitHub, Slack) on behalf of the logged-in user by exchanging the session's refresh token, without running a separate provider OAuth flow.
+  - New `HttpContext.GetAccessTokenForConnectionAsync(AccessTokenForConnectionRequest, string? scheme = null)` extension serves an unexpired connection token from the session cache when possible, and otherwise exchanges the refresh token and persists the result.
+  - `AccessTokenForConnectionRequest` carries `Connection` (required), an optional `LoginHint` (the provider-side IdP user ID), and `ForceRefresh` to bypass the cache.
+  - Returns `null` rather than throwing when no refresh token is present (fires `OnMissingRefreshToken`) or the exchange is rejected (fires `OnAccessTokenRefreshFailed`).
+- **Custom Token Exchange support** [\#258](https://github.com/auth0/auth0-aspnetcore-authentication/pull/258) ([kailash-b](https://github.com/kailash-b)) - applications can exchange an existing external/custom security token for Auth0 tokens without a browser redirect ([RFC 8693](https://auth0.com/docs/authenticate/custom-token-exchange)), enabling delegation/impersonation and agent-identity scenarios. Requires a Custom Token Exchange Profile and a validation Action configured in the tenant.
+  - New `HttpContext.CustomTokenExchangeAsync(CustomTokenExchangeRequest)` extension performs the exchange. `CustomTokenExchangeRequest` takes `SubjectToken` and `SubjectTokenType` (required), plus optional `Audience`, `Scope`, an `ActorToken`/`ActorTokenType` delegation pair, and `Organization`.
+  - `CustomTokenExchangeResult` returns the exchanged tokens (`AccessToken`, `IdToken`, `RefreshToken`, `ExpiresIn`, `Scope`) and the decoded `act` (actor) claim for delegation flows.
+  - **Stateless by design** - the exchange returns tokens but has no session side-effects: it does not sign the user in or write any cookie, leaving the caller to decide what to persist.
+  - Client-side validation runs before any network call (`subject_token` must be non-empty and un-prefixed; `subject_token_type` must be a valid 10–100 character URI, rejecting the reserved `urn:ietf:` and `urn:auth0:` namespaces; an actor token requires its matching type). Failures surface as `CustomTokenExchangeException`, which carries `StatusCode`, `Error`, and `ErrorDescription` but never token-bearing bytes.
+- **Claims refresh and `OnTokensRefreshed` event on token refresh** [\#254](https://github.com/auth0/auth0-aspnetcore-authentication/pull/254) ([kailash-b](https://github.com/kailash-b)) - previously, refreshing an expired access token persisted the new tokens but left the `ClaimsPrincipal` at its login-time snapshot for the life of the refresh token. Two opt-in additions let applications react to a successful primary refresh (fixes [\#174](https://github.com/auth0/auth0-aspnetcore-authentication/issues/174)).
+  - New `Auth0WebAppWithAccessTokenOptions.RebuildPrincipalOnRefresh` (default `false`) rebuilds the `ClaimsPrincipal` from the refreshed `id_token` so `User.Claims` and `User.Identity.Name` reflect current user information.
+  - New `Auth0WebAppWithAccessTokenOptions.RefreshClaimsValidationType` controls how the refreshed `id_token` is validated before its claims replace the principal (only consulted when `RebuildPrincipalOnRefresh` is `true`): `Full` (default) validates signature against the cached JWKS plus issuer/audience and business-rule checks, while `SkipSignature` trusts the back-channel TLS exchange and runs only the business-rule checks.
+  - New `Auth0WebAppWithAccessTokenEvents.OnTokensRefreshed` event fires after every successful primary refresh; the `AccessTokenRefreshedContext` carries the refreshed `AccessToken`, `IdToken`, `RefreshToken` (null when not rotated), and `ExpiresAt`. It fires independently of `RebuildPrincipalOnRefresh`, and after the principal is rebuilt when both are used.
+  - **Graceful degradation** - if the refresh succeeds but rebuilding the principal fails (signature failure, malformed token, or business-rule failure), the SDK keeps the refreshed tokens, retains the existing (stale) principal, logs a warning, and still fires `OnTokensRefreshed`.
+  - Both additions apply only to the primary (login-time) refresh path; tokens fetched for additional audiences via MRRT do not rebuild the principal or fire `OnTokensRefreshed`.
+
 ## [1.8.0](https://github.com/auth0/auth0-aspnetcore-authentication/tree/1.8.0) (2026-06-29)
 [Full Changelog](https://github.com/auth0/auth0-aspnetcore-authentication/compare/1.7.1...1.8.0)
 
