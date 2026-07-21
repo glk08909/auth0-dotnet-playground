@@ -9,17 +9,20 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
+         Debugger.Break();
         return View();
     }
 
     [Authorize(Roles = "Admin")]
     public IActionResult Admin()
     {
+         Debugger.Break();
         return View();
     }
 
     public IActionResult Error()
     {
+         Debugger.Break();
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

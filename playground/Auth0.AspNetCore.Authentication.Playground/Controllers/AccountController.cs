@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace Auth0.AspNetCore.Authentication.Playground.Controllers;
 
@@ -13,6 +14,7 @@ public class AccountController : Controller
 {
     public async Task Login(string returnUrl = "/")
     {
+         Debugger.Break();
         var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
             .WithRedirectUri(returnUrl)
             .Build();
@@ -22,6 +24,7 @@ public class AccountController : Controller
 
     public async Task Login2(string returnUrl = "/")
     {
+         Debugger.Break();
         var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
             .WithRedirectUri(returnUrl)
             .Build();
@@ -32,6 +35,7 @@ public class AccountController : Controller
     [Authorize]
     public async Task Logout()
     {
+         Debugger.Break();
         // Indicate here where Auth0 should redirect the user after a logout.
         // Note that the resulting absolute Uri must be whitelisted in the
         // **Allowed Logout URLs** settings for the client.
@@ -46,6 +50,7 @@ public class AccountController : Controller
     [Authorize]
     public async Task Logout2()
     {
+         Debugger.Break();
         // Indicate here where Auth0 should redirect the user after a logout.
         // Note that the resulting absolute Uri must be whitelisted in the
         // **Allowed Logout URLs** settings for the client.
@@ -59,7 +64,8 @@ public class AccountController : Controller
 
     [Authorize]
     public async Task<IActionResult> Profile()
-    {
+    {   
+        Debugger.Break();
         var accessToken = await HttpContext.GetTokenAsync("access_token");
         var idToken = await HttpContext.GetTokenAsync("id_token");
         var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
@@ -82,11 +88,13 @@ public class AccountController : Controller
     [Authorize]
     public IActionResult Claims()
     {
+         Debugger.Break();
         return View();
     }
 
     public IActionResult AccessDenied()
     {
+         Debugger.Break();
         return View();
     }
 }
