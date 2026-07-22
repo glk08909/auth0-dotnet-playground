@@ -1,0 +1,8 @@
+{
+    "files": {
+        "src/Auth0.AspNetCore.Authentication/Auth0.AspNetCore.Authentication.csproj": [],
+        ".version": []
+    },
+    "postbump": "docfx docs-source/docfx.json",
+    "prefixVersion": false
+}

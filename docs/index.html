@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title> </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=" ">
+      
+      
+      <link rel="icon" href="images/logo.png">
+      <link rel="stylesheet" href="public/docfx.min.css">
+      <link rel="stylesheet" href="public/main.css">
+      <meta name="docfx:navrel" content="toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/auth0/auth0-aspnetcore-authentication/blob/release/1.9.0/docs-source/index.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="index.html">
+            <img id="logo" class="svg" src="images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+
+      <div class="content">
+        <div class="actionbar">
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+
+<p><img src="https://cdn.auth0.com/website/sdks/banners/auth0-aspnetcore-authentication-banner.png" alt=""></p>
+<p>A library based on <code>Microsoft.AspNetCore.Authentication.OpenIdConnect</code> to make integrating Auth0 in your ASP.NET Core application as seamlessly as possible.</p>
+<p><img src="https://img.shields.io/github/v/release/auth0/auth0-aspnetcore-authentication" alt="Release">
+<img src="https://img.shields.io/nuget/dt/auth0.aspnetcore.authentication" alt="Downloads">
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/:license-MIT-blue.svg?style=flat" alt="License"></a>
+<img src="https://img.shields.io/azure-devops/build/Auth0SDK/Auth0.AspNetCore.Authentication/8" alt="AzureDevOps"></p>
+<p>📚 <a href="#documentation">Documentation</a> - 🚀 <a href="#getting-started">Getting Started</a> - 💻 <a href="#api-reference">API Reference</a> - 💬 <a href="#feedback">Feedback</a></p>
+<h2 id="documentation">Documentation</h2>
+<ul>
+<li><a href="https://auth0.com/docs/quickstart/webapp/aspnet-core">Quickstart</a> - our interactive guide for quickly adding login, logout and user information to an ASP.NET MVC application using Auth0.</li>
+<li><a href="https://github.com/auth0-samples/auth0-aspnetcore-mvc-samples/tree/master/Quickstart/Sample">Sample App</a> - a full-fledged ASP.NET MVC application integrated with Auth0.</li>
+<li><a href="https://github.com/auth0/auth0-aspnetcore-authentication/blob/main/EXAMPLES.md">Examples</a> - code samples for common ASP.NET MVC authentication scenario's.</li>
+<li><a href="https://www.auth0.com/docs">Docs site</a> - explore our docs site and learn more about</li>
+</ul>
+<h2 id="getting-started">Getting started</h2>
+<h3 id="requirements">Requirements</h3>
+<p>This library supports .NET 6.0 and above.</p>
+<h3 id="installation">Installation</h3>
+<p>The SDK is available on <a href="https://www.nuget.org/packages/Auth0.AspNetCore.Authentication">Nuget</a> and can be installed through the UI or using the Package Manager Console:</p>
+<pre><code>Install-Package Auth0.AspNetCore.Authentication
+</code></pre>
+<h3 id="configure-auth0">Configure Auth0</h3>
+<p>Create a <strong>Regular Web Application</strong> in the <a href="https://manage.auth0.com/#/applications">Auth0 Dashboard</a>.</p>
+<blockquote>
+<p><strong>If you're using an existing application</strong>, verify that you have configured the following settings in your Regular Web Application:</p>
+<ul>
+<li>Click on the &quot;Settings&quot; tab of your application's page.</li>
+<li>Scroll down and click on &quot;Advanced Settings&quot;.</li>
+<li>Under &quot;Advanced Settings&quot;, click on the &quot;OAuth&quot; tab.</li>
+<li>Ensure that &quot;JSON Web Token (JWT) Signature Algorithm&quot; is set to <code>RS256</code> and that &quot;OIDC Conformant&quot; is enabled.</li>
+</ul>
+</blockquote>
+<p>Next, configure the following URLs for your application under the &quot;Application URIs&quot; section of the &quot;Settings&quot; page:</p>
+<ul>
+<li><strong>Allowed Callback URLs</strong>: <code>https://YOUR_APP_DOMAIN:YOUR_APP_PORT/callback</code></li>
+<li><strong>Allowed Logout URLs</strong>: <code>https://YOUR_APP_DOMAIN:YOUR_APP_PORT/</code></li>
+</ul>
+<p>Take note of the <strong>Client ID</strong>, <strong>Client Secret</strong>, and <strong>Domain</strong> values under the &quot;Basic Information&quot; section. You'll need these values to configure your ASP.NET web application.</p>
+<blockquote>
+<p>ℹ️ You need the <strong>Client Secret</strong> only when you have to get an access token to <a href="#calling-an-api">call an API</a>.</p>
+</blockquote>
+<h3 id="configure-the-sdk">Configure the SDK</h3>
+<p>To make your ASP.NET web application communicate properly with Auth0, you need to add the following configuration section to your <code>appsettings.json</code> file:</p>
+<pre><code class="lang-json">  &quot;Auth0&quot;: {
+    &quot;Domain&quot;: &quot;YOUR_AUTH0_DOMAIN&quot;,
+    &quot;ClientId&quot;: &quot;YOUR_AUTH0_CLIENT_ID&quot;
+  }
+</code></pre>
+<p>Replace the placeholders with the proper values from the Auth0 Dashboard.</p>
+<p>Make sure you have enabled authentication and authorization in your <code>Startup.Configure</code> method:</p>
+<pre><code class="lang-csharp">...
+app.UseAuthentication();
+app.UseAuthorization();
+...
+</code></pre>
+<p>Integrate the SDK in your ASP.NET Core application by calling <code>AddAuth0WebAppAuthentication</code> in your <code>Startup.ConfigureServices</code> method:</p>
+<pre><code class="lang-csharp">services.AddAuth0WebAppAuthentication(options =&gt;
+{
+    options.Domain = Configuration[&quot;Auth0:Domain&quot;];
+    options.ClientId = Configuration[&quot;Auth0:ClientId&quot;];
+});
+</code></pre>
+<h3 id="login-and-logout">Login and Logout</h3>
+<p>Triggering login or logout is done using ASP.NET's <code>HttpContext</code>:</p>
+<pre><code class="lang-csharp">public async Task Login(string returnUrl = &quot;/&quot;)
+{
+    var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
+        .WithRedirectUri(returnUrl)
+        .Build();
+
+    await HttpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+}
+
+[Authorize]
+public async Task Logout()
+{
+    var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
+        // Indicate here where Auth0 should redirect the user after a logout.
+        // Note that the resulting absolute Uri must be added in the
+        // **Allowed Logout URLs** settings for the client.
+        .WithRedirectUri(Url.Action(&quot;Index&quot;, &quot;Home&quot;))
+        .Build();
+
+    await HttpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+}
+</code></pre>
+<p>For more code samples on how to integrate the <strong>auth0-aspnetcore-authentication</strong> SDK in your <strong>ASP.NET MVC</strong> application, have a look at our <a href="https://github.com/auth0/auth0-aspnetcore-authentication/blob/main/EXAMPLES.md">examples</a>.</p>
+<h2 id="api-reference">API reference</h2>
+<p>Explore public API's available in auth0-aspnetcore-authentication.</p>
+<ul>
+<li><a href="https://auth0.github.io/auth0-aspnetcore-authentication/api/Auth0.AspNetCore.Authentication.Auth0WebAppOptions.html">Auth0WebAppOptions</a></li>
+<li><a href="https://auth0.github.io/auth0-aspnetcore-authentication/api/Auth0.AspNetCore.Authentication.Auth0WebAppWithAccessTokenOptions.html">Auth0WebAppWithAccessTokenOptions</a></li>
+<li><a href="https://auth0.github.io/auth0-aspnetcore-authentication/api/Auth0.AspNetCore.Authentication.LoginAuthenticationPropertiesBuilder.html">LoginAuthenticationPropertiesBuilder</a></li>
+<li><a href="https://auth0.github.io/auth0-aspnetcore-authentication/api/Auth0.AspNetCore.Authentication.LogoutAuthenticationPropertiesBuilder.html">LogoutAuthenticationPropertiesBuilder</a></li>
+<li><a href="https://auth0.github.io/auth0-aspnetcore-authentication/api/Auth0.AspNetCore.Authentication.Auth0WebAppAuthenticationBuilder.html">Auth0WebAppAuthenticationBuilder</a></li>
+<li><a href="https://auth0.github.io/auth0-aspnetcore-authentication/api/Auth0.AspNetCore.Authentication.Auth0WebAppWithAccessTokenAuthenticationBuilder.html">Auth0WebAppWithAccessTokenAuthenticationBuilder</a></li>
+</ul>
+<h2 id="feedback">Feedback</h2>
+<h3 id="contributing">Contributing</h3>
+<p>We appreciate feedback and contribution to this repo! Before you get started, please see the following:</p>
+<ul>
+<li><a href="https://github.com/auth0/open-source-template/blob/master/GENERAL-CONTRIBUTING.md">Auth0's general contribution guidelines</a></li>
+<li><a href="https://github.com/auth0/open-source-template/blob/master/CODE-OF-CONDUCT.md">Auth0's code of conduct guidelines</a></li>
+<li><a href="https://github.com/auth0/auth0-aspnetcore-authentication/blob/main/CONTRIBUTING.md">This repo's contribution guide</a></li>
+</ul>
+<h3 id="raise-an-issue">Raise an issue</h3>
+<p>To provide feedback or report a bug, please <a href="https://github.com/auth0/auth0-aspnetcore-authentication/issues">raise an issue on our issue tracker</a>.</p>
+<h3 id="vulnerability-reporting">Vulnerability Reporting</h3>
+<p>Please do not report security vulnerabilities on the public GitHub issue tracker. The <a href="https://auth0.com/responsible-disclosure-policy">Responsible Disclosure Program</a> details the procedure for disclosing security issues.</p>
+<hr>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="https://cdn.auth0.com/website/sdks/logos/auth0_light_mode.png" width="150">
+    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.auth0.com/website/sdks/logos/auth0_dark_mode.png" width="150">
+    <img alt="Auth0 Logo" src="https://cdn.auth0.com/website/sdks/logos/auth0_light_mode.png" width="150">
+  </picture>
+</p>
+<p align="center">Auth0 is an easy to implement, adaptable authentication and authorization platform. To learn more checkout <a href="https://auth0.com/why-auth0">Why Auth0?</a></p>
+<p align="center">
+This project is licensed under the MIT license. See the <a href="https://github.com/auth0/auth0-aspnetcore-authentication/blob/main/LICENSE"> LICENSE</a> file for more info.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
